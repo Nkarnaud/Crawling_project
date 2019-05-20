@@ -27,8 +27,20 @@ class MultiThreadCrawler:
                 if url not in self.scraped_pages:
                     self.to_crawl.put(url)
 
-    def scrape_info(self, html):
-        return
+    def scrape_info(self, response):
+        SET_SELECTOR = '.set'
+        for brickset in response.css(SET_SELECTOR):
+            NAME_SELECTOR = 'h1 ::text'
+            PIECES_SELECTOR = './/dl[dt/text() = "Pieces"]/dd/a/text()'
+            MINIFIGS_SELECTOR = './/dl[dt/text() = "Minifigs"]/dd[2]/a/text()'
+            IMAGE_SELECTOR = 'img ::attr(src)'
+            yield {
+                'name': brickset.css(NAME_SELECTOR).extract_first(),
+                'pieces': brickset.xpath(PIECES_SELECTOR).extract_first(),
+                'minifigs': brickset.xpath(MINIFIGS_SELECTOR).extract_first(),
+                'image': brickset.css(IMAGE_SELECTOR).extract_first(),
+            }
+
 
     def post_scrape_callback(self, res):
         result = res.result()
@@ -58,5 +70,5 @@ class MultiThreadCrawler:
                 print(e)
                 continue
 if __name__ == '__main__':
-    s = MultiThreadCrawler("your web site to crawl")
+    s = MultiThreadCrawler("https://brickset.com/")
     s.run_scraper()
